@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""
+Save clipboard image to a file (cross-platform).
+Usage: python clipboard-image.py [output_path]
+Default output: system temp directory / clipboard-image.png
+"""
+
+import sys
+import os
+import subprocess
+import tempfile
+import platform
+
+def get_default_path():
+    return os.path.join(tempfile.gettempdir(), "clipboard-image.png")
+
+def get_clipboard_image_macos(output_path):
+    """macOS: use osascript."""
+    script = f'''
+    set theFile to POSIX file "{output_path}"
+    try
+        set imageData to the clipboard as «class PNGf»
+        set fileRef to open for access theFile with write permission
+        set eof fileRef to 0
+        write imageData to fileRef
+        close access fileRef
+        return "saved"
+    on error
+        try
+            close access theFile
+        end try
+        return "no image"
+    end try
+    '''
+    result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+    return result.stdout.strip() == "saved"
+
+def get_clipboard_image_windows(output_path):
+    """Windows: use PowerShell."""
+    script = f'''
+    Add-Type -AssemblyName System.Windows.Forms
+    $img = [System.Windows.Forms.Clipboard]::GetImage()
+    if ($img -ne $null) {{
+        $img.Save("{output_path}")
+        Write-Output "saved"
+    }} else {{
+        Write-Output "no image"
+    }}
+    '''
+    result = subprocess.run(['powershell', '-Command', script], capture_output=True, text=True)
+    return "saved" in result.stdout
+
+def get_clipboard_image_linux(output_path):
+    """Linux: use xclip."""
+    try:
+        result = subprocess.run(
+            ['xclip', '-selection', 'clipboard', '-t', 'image/png', '-o'],
+            capture_output=True
+        )
+        if result.returncode == 0 and result.stdout:
+            with open(output_path, 'wb') as f:
+                f.write(result.stdout)
+            return True
+    except FileNotFoundError:
+        print("xclip not found. Install with: sudo apt install xclip")
+    return False
+
+def get_clipboard_image(output_path=None):
+    if output_path is None:
+        output_path = get_default_path()
+
+    system = platform.system()
+
+    if system == "Darwin":
+        success = get_clipboard_image_macos(output_path)
+    elif system == "Windows":
+        success = get_clipboard_image_windows(output_path)
+    elif system == "Linux":
+        success = get_clipboard_image_linux(output_path)
+    else:
+        print(f"Unsupported platform: {system}")
+        return False
+
+    if success:
+        print(f"Image saved to: {output_path}")
+    else:
+        print("No image found in clipboard")
+    return success
+
+if __name__ == "__main__":
+    output = sys.argv[1] if len(sys.argv) > 1 else None
+    get_clipboard_image(output)
