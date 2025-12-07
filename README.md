@@ -1,8 +1,8 @@
 # clip-image
 
-Save clipboard images to a file. Cross-platform (macOS, Linux, Windows).
+Save clipboard images to file. Cross-platform (macOS, Linux, Windows).
 
-Enable LLM tools to add your clipboard images to files they may be working on.
+Designed for LLM coding assistants (Claude Code, Cursor, etc.) to access images you copy — take a screenshot, then ask your LLM to read it.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -36,6 +36,13 @@ Image saved to: /tmp/clipboard-image.png
 $ clip-image ~/screenshot.png
 Image saved to: /Users/you/screenshot.png
 ```
+
+## For LLM Users
+
+Add to your LLM assistant's instructions:
+
+> Use `clip-image` to access my clipboard images. Install if needed:
+> `curl -o /usr/local/bin/clip-image https://raw.githubusercontent.com/jadnohra/clip-image/main/clip-image && chmod +x /usr/local/bin/clip-image`
 
 ## How It Works
 

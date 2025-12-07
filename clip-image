@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Save clipboard image to a file (cross-platform).
-Usage: python clipboard-image.py [output_path]
-Default output: system temp directory / clipboard-image.png
+clip-image - Save clipboard image to file (cross-platform).
+Designed for LLM coding assistants to access user clipboard images.
 """
 
 import sys
@@ -11,8 +10,28 @@ import subprocess
 import tempfile
 import platform
 
+HELP_TEXT = """clip-image - Save clipboard image to file
+
+USAGE:
+    clip-image [OUTPUT_PATH]
+
+ARGUMENTS:
+    OUTPUT_PATH    Path to save image (default: {default_path})
+
+EXAMPLES:
+    clip-image                     # Save to temp directory
+    clip-image ~/screenshot.png    # Save to specific path
+
+FOR LLM ASSISTANTS:
+    Run: clip-image
+    Then read the image file at the printed path to see what the user copied.
+"""
+
 def get_default_path():
     return os.path.join(tempfile.gettempdir(), "clipboard-image.png")
+
+def show_help():
+    print(HELP_TEXT.format(default_path=get_default_path()))
 
 def get_clipboard_image_macos(output_path):
     """macOS: use osascript."""
@@ -84,9 +103,12 @@ def get_clipboard_image(output_path=None):
     if success:
         print(f"Image saved to: {output_path}")
     else:
-        print("No image found in clipboard")
+        print("No image in clipboard. Ask user to copy an image first (screenshot, etc.)")
     return success
 
 if __name__ == "__main__":
-    output = sys.argv[1] if len(sys.argv) > 1 else None
-    get_clipboard_image(output)
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+        show_help()
+    else:
+        output = sys.argv[1] if len(sys.argv) > 1 else None
+        get_clipboard_image(output)
